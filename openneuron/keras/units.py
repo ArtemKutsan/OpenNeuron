@@ -13,7 +13,7 @@ class Neuron:
         # self.number = None
         self.init_Inputs = None
         self.init_weights = np.array(weights, dtype=np.float32)  # начальные значения весов
-        self.init_bias = None if bias is None else np.array(bias, dtype=np.float32)  # начальные значения смещений
+        self.init_bias = None if bias is None else np.array(bias, dtype=np.float64)  # начальные значения смещений
         self.activation = activation
 
     @property

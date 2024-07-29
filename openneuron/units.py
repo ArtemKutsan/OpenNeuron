@@ -9,14 +9,14 @@ class Neuron:
         Neuron.count += 1
         self.number = Neuron.count  # назначение номера нейрона
         self.id = id(self)
-        self.Inputs = None  # все значения inputs батча (X_batch)
+        self.Inputs = None  # массив значений inputs (x) батча (X)
         # self.inputs = None # значение inputs последнего прошедшего через нейрон объекта x (в рассчетах не используется, просто для вывода информации)
         self.weights = weights
         self.bias = bias
-        self.Z = None  # все значения z батча (z каждого x в батче)
+        self.Z = None  # массив значений z батча (z каждого x в батче X)
         # self.z = None  # значение z последнего прошедшего через нейрон объекта x (в рассчетах не используется, просто для вывода информации)
         self.activation = activation  # функция активации нейрона
-        self.A = None  # все значения a батча (a каждого x в батче)
+        self.A = None  # массив значений a батча (a каждого x в батче X)
         # self.a = None  # значение a последнего прошедшего через нейрон объекта x (в рассчетах не используется, просто для вывода информации)
 
     @property
@@ -44,11 +44,16 @@ class Neuron:
         self.A = self.activation(self.Z)
         return self.A
     
-    def call(self, Inputs, training=True):
-        ''' Любой дополнительный код '''
+    def call(self, Inputs, training=False):
+        ''' # Метод call вызывается после выполнения встроенного метода __call__.
+        Служит для дополнения/изменения работы встроенного метода __call__ не нарушая необходимый для правильной работы процесс
+        вычисления данных при вызове объекта. На вход получает входные данные (массив X). По умолчанию возвращает значение(я) 
+        активированного выхода нейрона (массив A).
+        '''
+        # Любой дополнительный код
         return self.A
 
-    def __call__(self, Inputs, training=True):
+    def __call__(self, Inputs, training=False):
         self.forward(Inputs, training)
         return self.call(Inputs, training)
 
