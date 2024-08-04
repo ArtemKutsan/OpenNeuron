@@ -23,7 +23,7 @@ def format(value, decimals=2, edge_items=2):
 # Оценка точности
 def network_scores(X, y, predictions):
     # predictions = predictions.reshape(y.shape)
-    print('Network scores')
+    print('Network scores:')
     print('Incorrect Predictions (Significant Difference) on Test Data:')
     all_predictions_correct = True
 
@@ -45,7 +45,7 @@ def network_scores(X, y, predictions):
             x_formatted = format_array(x)
             y_pred_formatted = format_array(y_pred)
             y_true_formatted = format_array(y_true, decimals=0)
-            print(f'Input: {x_formatted}, Predicted: {y_pred_formatted}, True: {y_true_formatted}, Predicted Class: {predicted_class}, True Class: {true_class}')
+            print(f'Network inputs: {x_formatted}, predicted: {y_pred_formatted}, true: {y_true_formatted}, predicted class: {predicted_class}, true class: {true_class}')
             all_predictions_correct = False
         
     if all_predictions_correct:

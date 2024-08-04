@@ -28,7 +28,7 @@ class SGD(Optimizer):
         self.m['bias'][object.id] = m_bias
 
     def __str__(self):
-        return f'"SGD" with momentum {self.momentum}' 
+        return f'"SGD"' 
 
 class Adam(Optimizer):
     def __init__(self, learning_rate=0.1, beta1=0.9, beta2=0.999, initial_step=1, gradient_threshold=False):

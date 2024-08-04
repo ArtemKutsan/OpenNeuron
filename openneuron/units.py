@@ -3,6 +3,7 @@ import numpy as np
 from .activations import *
 from .utils import format
 
+
 # Класс для нейрона
 class Neuron:
     count = 0
@@ -10,6 +11,7 @@ class Neuron:
     def __init__(self, weights='he', bias='he', input_size=2, activation=linear):
         Neuron.count += 1
         self.number = Neuron.count  # порядковый номер объекта нейрон
+        self.name = self.__class__.__name__  # имя класса объекта
         self.id = id(self)  # уникальный id объекта
         self.layer = None  # ссылка на слой в котором находится нейрон (устанавливается слоем если нейрон находится в слое)
         self.index = None  # индекс нейрона в слое
@@ -80,6 +82,83 @@ class Neuron:
 
     def __str__(self):
         decimals = 4
-        return f'Neuron {format(self.number, decimals=decimals)}, inputs: {format(self.inputs, decimals=decimals)}, ' \
+        return f'{self.name} {self.number}, inputs: {format(self.inputs, decimals=decimals)}, ' \
                f'weights: {format(self.weights.flatten(), decimals=decimals)}, bias: {format(self.bias.item(), decimals=decimals)}, ' \
                f'z: {format(self.z, decimals=decimals)}, activation: {self.activation.__name__}, a: {format(self.a, decimals=decimals)}'
+    
+
+class Unit(Neuron):
+    count = 0
+
+    def __init__(self, weights='kernel', bias='kernel'):
+        Unit.count += 1
+        self.number = Unit.count  # порядковый номер объекта класса Unit
+        self.name = self.__class__.__name__  # имя класса объекта
+        self.id = id(self)  # уникальный id
+        self.layer = None  # ссылка на слой в котором находится (устанавливается слоем)
+        self.index = None  # индекс в слое (устанавливается слоем)
+        self.weights = weights  # веса (могут быть установлены в ручную или инициализированы слоем)
+        self.bias = bias  # смещение (может быть установлено в ручную или инициализировано слоем)
+        self.activation = None  # функция активации (устанавливается слоем)
+
+    @property
+    # Массив значений inputs (x) батча (X) берется из слоя
+    def Inputs(self):
+        return self.layer.Inputs
+    
+    @property
+    # Значение inputs последнего прошедшего объекта (в рассчетах не используется, просто для вывода информации в методе __str__)
+    def inputs(self):
+        return self.Inputs[-1] if self.Inputs is not None else None
+
+    @property
+    # Массив значений z батча (z каждого x в батче X) берется из слоя
+    def Z(self):
+        return self.layer.Z.T[self.index] if self.layer.Z is not None else None
+        
+    @property
+    # Значение z последнего прошедшего объекта (в рассчетах не используется, просто для вывода информации в методе __str__)
+    def z(self):
+        return self.Z.T[-1].item() if self.Z is not None else None
+    
+    @property
+    # Массив значений a батча (a каждого x в батче X)
+    def A(self):
+        return self.activation(self.Z) if self.Z is not None else None
+        # return self.layer.A.T[self.index] if self.layer.A is not None else None
+
+    @property
+    # Значение a последнего прошедшего объекта (в рассчетах не используется, просто для вывода информации в методе __str__)
+    def a(self):
+        return self.A.T[-1].item() if self.A is not None else None
+
+    def activation_derivative(self):
+        raise NotImplementedError('Unsupported method by layer object')
+    
+    def forward(self):
+        raise NotImplementedError('Unsupported method by layer object')
+
+    def backward(self):
+        raise NotImplementedError('Unsupported method by layer object')
+
+    def update(self):
+        raise NotImplementedError('Unsupported method by layer object')
+
+    def fit(self):
+        raise NotImplementedError('Unsupported method by layer object')
+
+    def predict(self):
+        raise NotImplementedError('Unsupported method by layer object')
+    
+    def call(self):
+        raise NotImplementedError('Unsupported method by layer object')
+
+    def __call__(self):
+        raise NotImplementedError('Unsupported method by layer object')
+    
+    def __str__(self):
+        decimals, edge_items = 2, 2
+        return f'{self.name} {self.index + 1}/{self.layer.num_neurons}, inputs: {format(self.inputs, decimals, edge_items)}, ' \
+               f'weights: {format(self.weights.flatten(), decimals, edge_items)}, bias: {format(self.bias.item(), decimals, edge_items)}, ' \
+               f'z: {format(self.z, decimals, edge_items)}, activation: {self.activation.__name__}, a: {format(self.a, decimals, edge_items)}'
+    

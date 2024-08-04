@@ -1,21 +1,24 @@
-from .units import Neuron
+from .units import Neuron, Unit
+from .initializers import *
 from .activations import *
 
 
-# Класс для слоя нейронов
+# Класс для слоя
 class Layer:
     count = 0
 
-    def __init__(self, neurons, activation=None):
+    def __init__(self, neurons, activation=linear, kernel=GlorotUniform()):
         Layer.count += 1
         self.number = Layer.count  # назначение номера слоя
+        self.name = self.__class__.__name__
         self.id = id(self)
         self.output_size = None
         self.Inputs = None  # матрица входов (батча)
+        self.kernel = kernel if kernel is not None else GlorotUniform()
         self.weights = None  # матрица весов слоя (веса всех нейронов слоя)
         self.bias = None  # матрица смещений слоя (смещения всех нейронов слоя)
         self.Z = None  # массив значений z всего батча прошедшего через слой (массив векторов значений Z всех нейронов вслое)
-        self.activation = activation or linear  # функция активации слоя (всех нейронов в слое)
+        self.activation = activation if activation is not None else linear  # функция активации слоя (всех нейронов в слое)
         self.A = None  # массив значений активаций всего батча прошедшего через слой (массив векторов активаций всех нейронов вслое)
         self.delta = None  # матрица дельт слоя
         self.gradient = {'weights': None, 'bias': None}  # матрица градиентов весов и смещений слоя
@@ -27,13 +30,14 @@ class Layer:
         if isinstance(self.neurons, int):
             # print('Мы в автоматической инициализации нейронов')
             self.output_size = self.neurons
-            self.weights, self.bias = xavier(self.input_size, self.output_size)
-            self.neurons = [Neuron() for i in range(self.neurons)]
+            self.weights = self.kernel(shape=(self.input_size, self.output_size)) 
+            self.bias = self.kernel(shape=(1, self.output_size))
+            self.neurons = [Unit() for i in range(self.neurons)]
         else:
             # print('Мы в ручной инициализации нейронов')
             self.output_size = len(self.neurons)
             self.weights = np.array([neuron.weights for neuron in self.neurons]).T
-            self.bias = np.array([neuron.bias for neuron in self.neurons]).reshape(1, -1)
+            self.bias = np.array([neuron.bias for neuron in self.neurons]).reshape(1, -1)  # проверить .T
         
         self.num_neurons = self.output_size
 
@@ -110,7 +114,7 @@ class Layer:
         return self.activation(Z, derivative=True)
 
     def __str__(self):
-        return f'Layer {self.number}, neurons: {len(self.neurons)}, activation: {self.activation.__name__}'
+        return f'{self.name} {self.number}, neurons: {len(self.neurons)}, inputs: {self.Inputs[-1]}, activation: {self.activation.__name__}, output: {self.A[-1]}'
 
 
 # Класс слоя для отключения нейронов 

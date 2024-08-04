@@ -1,6 +1,6 @@
 import numpy as np
 
-from .units import Neuron
+from .units import Neuron, Unit
 from .layers import Layer
 from .activations import *
 from .losses import *
@@ -9,10 +9,10 @@ from .optimizers import *
 
 # Класс для нейронной сети
 class NeuralNetwork:
-    Neuron.count = 0
+    Unit.count = 0
     Layer.count = 0
     def __init__(self, layers, inputs_dim, loss='mse', optimizer=SGD(momentum=0)):
-        Neuron.count = 0
+        Unit.count = 0
         Layer.count = 0
         self.type = None
         self.layers = layers
@@ -142,7 +142,8 @@ class NeuralNetwork:
         return self.forward(X, training=False)
     
     def summary(self):
-        print(self)
+        print(f'Info:\n{self}')
+        print(f'Last forward:')
         for layer in self.layers:
             if isinstance(layer, Layer): 
                 print(layer)

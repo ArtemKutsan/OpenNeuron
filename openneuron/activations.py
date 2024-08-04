@@ -88,6 +88,7 @@ def linear(Z, derivative=False):
 
 # Функция активации Heaviside (Step Function) с расчетом производной
 def heaviside(Z, threshold=0.5, derivative=False):
+    heaviside.__name__ = 'heaviside/step'
     if derivative:
         return np.ones_like(Z)
     return np.where(Z >= threshold, 1, 0)
