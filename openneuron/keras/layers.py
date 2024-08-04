@@ -28,11 +28,11 @@ class CustomDense(tf.keras.layers.Layer):
 
         # Создание матрицы весов и смещений из установленных вручную в нейроне весов и смещений
         if isinstance(self.neurons, list):
-            Weights = np.array([neuron.init_weights for neuron in self.neurons]).T  # матрица всех весов нейронов слоя
-            Biases = np.array([neuron.init_bias if neuron.init_bias is not None else 0 for neuron in self.neurons])  # матрица всех смещений нейронов слоя
+            weights = np.array([neuron.init_weights for neuron in self.neurons]).T  # матрица всех весов нейронов слоя
+            bias = np.array([neuron.init_bias if neuron.init_bias is not None else 0 for neuron in self.neurons])  # матрица всех смещений нейронов слоя
 
             # Переинициализация весов и смещений слоя вручную установленными в нейронах весами и смещениями
-            self.set_weights([Weights, Biases]) if use_bias else self.set_weights([Weights])
+            self.set_weights([weights, bias]) if use_bias else self.set_weights([weights])
         else:
             self.neurons = []
             for index in range(self.units):

@@ -2,8 +2,6 @@ import numpy as np
 
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
-from .layers import Layer
-
 
 # Функция форматирования строк
 def format(value, decimals=2, edge_items=2):
@@ -20,23 +18,6 @@ def format(value, decimals=2, edge_items=2):
             return np.array2string(value, formatter={'float_kind': lambda x: f'{np.round(x, decimals)}'})
     else:
         raise TypeError('The input must be an int, np.int32, np.int64, float, np.float32, np.float64, or np.ndarray.')
-
-
-def network_summary(network):
-    print(network)
-    for layer in network.layers:
-        if isinstance(layer, Layer): 
-            print(layer)
-            
-            if layer.num_neurons > 4:
-                print(layer.neurons[0])
-                print(layer.neurons[1])
-                print('...')
-                print(layer.neurons[-2])
-                print(layer.neurons[-1])
-            else:
-                for neuron in layer.neurons:
-                    print(neuron)
 
 
 # Оценка точности

@@ -7,32 +7,33 @@ class Optimizer:
         raise NotImplementedError('This method should be overridden by subclasses')
 
 class SGD(Optimizer):
-    def __init__(self, learning_rate=0.01, momentum=0.9):
+    def __init__(self, learning_rate=0.1, momentum=0):
         self.learning_rate = learning_rate
         self.momentum = momentum
-        self.Delta = {'Weights': {}, 'Biases': {}}
+        self.m = {'weights': {}, 'bias': {}}
 
-    def update(self, object, learning_rate):
-        # Метод инициализации массива Delta оптимизатора для текущего объекта, если еще не инициализировано
-        self.Delta['Weights'].setdefault(object.id, np.zeros_like(object.Weights))
-        self.Delta['Biases'].setdefault(object.id, np.zeros_like(object.Biases))
+    def update(self, object):
+        # Метод инициализации массива delta оптимизатора для текущего объекта, если еще не инициализирован
+        self.m['weights'].setdefault(object.id, np.zeros_like(object.weights))
+        self.m['bias'].setdefault(object.id, np.zeros_like(object.bias))
+        # print(f'object.weights:\n{object.weights}')
+        # print(f'object.bias: {object.bias}')
+        m_weights = self.learning_rate * object.gradient['weights'] + self.momentum * self.m['weights'][object.id]
+        object.weights -= m_weights
+        self.m['weights'][object.id] = m_weights
 
-        Delta_Weights = learning_rate * object.Gradient['Weights'] + self.momentum * self.Delta['Weights'][object.id]
-        object.Weights -= Delta_Weights
-        self.Delta['Weights'][object.id] = Delta_Weights
-
-        Delta_Biases = learning_rate * object.Gradient['Biases'] + self.momentum * self.Delta['Biases'][object.id]
-        not_none = np.where(object.Biases != None)
-        object.Biases[not_none] -= Delta_Biases[not_none]
-        self.Delta['Biases'][object.id] = Delta_Biases
+        m_bias = self.learning_rate * object.gradient['bias'] + self.momentum * self.m['bias'][object.id]
+        not_none = np.where(object.bias != None)
+        object.bias[not_none] -= m_bias[not_none]
+        self.m['bias'][object.id] = m_bias
 
     def __str__(self):
         return f'"SGD" with momentum {self.momentum}' 
 
 class Adam(Optimizer):
-    def __init__(self, learning_rate=0.01, beta1=0.9, beta2=0.999, initial_step=1, gradient_threshold=False):
-        self.m = {'Weights': {}, 'Biases': {}}
-        self.v = {'Weights': {}, 'Biases': {}}
+    def __init__(self, learning_rate=0.1, beta1=0.9, beta2=0.999, initial_step=1, gradient_threshold=False):
+        self.m = {'weights': {}, 'bias': {}}
+        self.v = {'weights': {}, 'bias': {}}
         self.beta1, self.beta2 = beta1, beta2
         self.epsilon = 1e-8
         self.t = 0
@@ -40,37 +41,37 @@ class Adam(Optimizer):
         self.step = initial_step
         self.gradient_threshold = gradient_threshold
 
-    def update(self, object, learning_rate):
+    def update(self, object):
         # Initialize moments if they do not exist
-        self.m['Weights'].setdefault(object.id, np.zeros_like(object.Weights))
-        self.v['Weights'].setdefault(object.id, np.zeros_like(object.Weights))
-        self.m['Biases'].setdefault(object.id, np.zeros_like(object.Biases))
-        self.v['Biases'].setdefault(object.id, np.zeros_like(object.Biases))
+        self.m['weights'].setdefault(object.id, np.zeros_like(object.weights))
+        self.v['weights'].setdefault(object.id, np.zeros_like(object.weights))
+        self.m['bias'].setdefault(object.id, np.zeros_like(object.bias))
+        self.v['bias'].setdefault(object.id, np.zeros_like(object.bias))
 
         self.t += 1
         if self.gradient_threshold:
-            gradient_norm = np.linalg.norm(object.Gradient['Weights']) + np.linalg.norm(object.Gradient['Biases'])
+            gradient_norm = np.linalg.norm(object.gradient['weights']) + np.linalg.norm(object.gradient['bias'])
             if gradient_norm > self.gradient_threshold:
                 self.t += self.step
         
-        corrected_learning_rate = learning_rate * np.sqrt(1 - self.beta2**self.t) / (1 - self.beta1**self.t)
+        corrected_learning_rate = self.learning_rate * np.sqrt(1 - self.beta2**self.t) / (1 - self.beta1**self.t)
 
-        # Update Weights
-        self.m['Weights'][object.id] = self.beta1 * self.m['Weights'][object.id] + (1 - self.beta1) * object.Gradient['Weights']
-        self.v['Weights'][object.id] = self.beta2 * self.v['Weights'][object.id] + (1 - self.beta2) * (object.Gradient['Weights'] ** 2)
-        m_Weights_hat = self.m['Weights'][object.id] / (1 - self.beta1 ** self.t)
-        v_Weights_hat = self.v['Weights'][object.id] / (1 - self.beta2 ** self.t)
+        # Update weights
+        self.m['weights'][object.id] = self.beta1 * self.m['weights'][object.id] + (1 - self.beta1) * object.gradient['weights']
+        self.v['weights'][object.id] = self.beta2 * self.v['weights'][object.id] + (1 - self.beta2) * (object.gradient['weights'] ** 2)
+        m_weights_hat = self.m['weights'][object.id] / (1 - self.beta1 ** self.t)
+        v_weights_hat = self.v['weights'][object.id] / (1 - self.beta2 ** self.t)
 
-        object.Weights -= corrected_learning_rate * m_Weights_hat / (np.sqrt(v_Weights_hat) + self.epsilon)
+        object.weights -= corrected_learning_rate * m_weights_hat / (np.sqrt(v_weights_hat) + self.epsilon)
 
-        # Update Biases
-        self.m['Biases'][object.id] = self.beta1 * self.m['Biases'][object.id] + (1 - self.beta1) * object.Gradient['Biases']
-        self.v['Biases'][object.id] = self.beta2 * self.v['Biases'][object.id] + (1 - self.beta2) * (object.Gradient['Biases'] ** 2)
-        m_Biases_hat = self.m['Biases'][object.id] / (1 - self.beta1 ** self.t)
-        v_Biases_hat = self.v['Biases'][object.id] / (1 - self.beta2 ** self.t)
+        # Update bias
+        self.m['bias'][object.id] = self.beta1 * self.m['bias'][object.id] + (1 - self.beta1) * object.gradient['bias']
+        self.v['bias'][object.id] = self.beta2 * self.v['bias'][object.id] + (1 - self.beta2) * (object.gradient['bias'] ** 2)
+        m_bias_hat = self.m['bias'][object.id] / (1 - self.beta1 ** self.t)
+        v_bias_hat = self.v['bias'][object.id] / (1 - self.beta2 ** self.t)
 
-        not_none = np.where(object.Biases != None)
-        object.Biases[not_none] -= corrected_learning_rate * m_Biases_hat[not_none] / (np.sqrt(v_Biases_hat[not_none]) + self.epsilon)
+        not_none = np.where(object.bias != None)
+        object.bias[not_none] -= corrected_learning_rate * m_bias_hat[not_none] / (np.sqrt(v_bias_hat[not_none]) + self.epsilon)
 
     def __str__(self):
         return '"Adam"'

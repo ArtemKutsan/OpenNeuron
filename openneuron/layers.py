@@ -1,5 +1,4 @@
 from .units import Neuron
-from .functions import *
 from .activations import *
 
 
@@ -13,31 +12,32 @@ class Layer:
         self.id = id(self)
         self.output_size = None
         self.Inputs = None  # матрица входов (батча)
-        self.Weights = None  # матрица весов слоя (веса всех нейронов слоя)
-        self.Biases = None  # матрица смещений слоя (смещения всех нейронов слоя)
-        self.Z = None  # вектор значений z всего батча прошедшего через слой (массив векторов значений Z всех нейронов вслое)
+        self.weights = None  # матрица весов слоя (веса всех нейронов слоя)
+        self.bias = None  # матрица смещений слоя (смещения всех нейронов слоя)
+        self.Z = None  # массив значений z всего батча прошедшего через слой (массив векторов значений Z всех нейронов вслое)
         self.activation = activation or linear  # функция активации слоя (всех нейронов в слое)
-        self.A = None  # вектор значений активаций всего батча прошедшего через слой (массив векторов активаций всех нейронов вслое)
-        self.Delta = None  # матрица дельт слоя
-        self.Gradient = {'Weights': None, 'Biases': None}  # матрица градиентов весов и смещений слоя
+        self.A = None  # массив значений активаций всего батча прошедшего через слой (массив векторов активаций всех нейронов вслое)
+        self.delta = None  # матрица дельт слоя
+        self.gradient = {'weights': None, 'bias': None}  # матрица градиентов весов и смещений слоя
         self.neurons = neurons
         self.num_neurons = None
 
     def initialize(self, input_size):
+        self.input_size = input_size
         if isinstance(self.neurons, int):
             # print('Мы в автоматической инициализации нейронов')
             self.output_size = self.neurons
-            self.Weights, self.Biases = xavier(input_size, self.output_size)
+            self.weights, self.bias = xavier(self.input_size, self.output_size)
             self.neurons = [Neuron() for i in range(self.neurons)]
         else:
             # print('Мы в ручной инициализации нейронов')
-            self.output_size = len(self.neurons)       
-            self.Weights = np.array([neuron.weights for neuron in self.neurons]).T
-            self.Biases = np.array([neuron.bias for neuron in self.neurons]).reshape(1, -1)
+            self.output_size = len(self.neurons)
+            self.weights = np.array([neuron.weights for neuron in self.neurons]).T
+            self.bias = np.array([neuron.bias for neuron in self.neurons]).reshape(1, -1)
         
         self.num_neurons = self.output_size
 
-        ''' # Важный момент. Примечание к матрице весов и смещений слоя.
+        ''' # !!! Примечание к матрице весов и смещений слоя.
         Так как Python при работе с изменяемыми объектами (например: list, dict, set и др.) при присваивании одной переменной значения 
         другой переменной просто создает ссылку на значение этого объекта в памяти, то мы можем использовать это. В данном случае 
         в neuron.weights и в neuron.bias не записываются соответствующие значения из матрицы весов и матрицы смещений слоя, 
@@ -47,21 +47,31 @@ class Layer:
         при изменении весов и смещений. При этом нельзя переинициализировывать матрицу весов и смещений заново в коде. Иначе нужно 
         пересоздавать ссылки. '''
         # !!! Создаем/пересоздаем в нейронах ССЫЛКИ на соответствующие веса и смещения матрицы весов и матрицы смещений слоя
-        for neuron, weights, bias in zip(self.neurons, self.Weights.T, self.Biases.T):
-            neuron.weights = weights
-            neuron.bias = bias
-            # Попутно проверяем активации нейрона и если она равна None то устанавливаем им активацию слоя
+        for index, (neuron, weights, bias) in enumerate(zip(self.neurons, self.weights.T, self.bias.T)):
+            neuron.weights = weights  # ссылка на веса нейрона в матрице весов слоя
+            neuron.bias = bias  # ссылка на смещение нейрона в матрице смещений слоя
+            neuron.index = index  # индекс нейрона в слое
+            neuron.layer = self  # ссылка на слой в котором находится нейрон
+            # Попутно проверяем активации нейрона и если она равна None то устанавливаем ему активацию слоя
             if neuron.activation is None:
                 if self.activation == softmax:
-                    neuron.activation = linear  # для softmax активация нейронов слоя softmax не нужна, то есть A = Z
+                    neuron.activation = linear  # активация нейронов слоя softmax не нужна, то есть A = Z
                 else:
                     neuron.activation = self.activation  # если у нейрона не установлена активация то ставим ему активацию слоя 
         return self.output_size
 
-    # Метод Forward pass через слой (реализация со словарями по замерам скорости оказалась быстрее)    
+    # Метод Forward pass через слой   
     def forward(self, Inputs, training=True):
         self.Inputs = Inputs
-        # Матрица Z вычисляется с учетом настройки bias каждого нейрона, матрица A вычисляется с учетом настройки активации каждого нейрона)
+        # (Требуется доработка) Матрица Z вычисляется через матричные вычисления с учетом bias каждого нейрона, матрица A вычисляется БЕЗ учета настройки активации каждого нейрона
+        self.Z = np.dot(self.Inputs, self.weights) + np.where(self.bias == None, 0, self.bias).astype(float)
+        self.A = self.activation(self.Z)  # активация слоем (одна и та же для всех нейронов одного слоя)
+        ''' # Отладка
+        if training:
+            print(f'Z слоя {self.number} для батча вычисленное матрично:\n{self.Z.T}, {self.Z.dtype}')
+            print(f'A слоя {self.number} для батча (одна общая активация слоя для всех нейронов в слое):\n{self.A.T}')
+        '''
+        ''' # Матрица Z вычисляется с учетом настройки bias каждого нейрона, матрица A вычисляется с учетом настройки активации каждого нейрона
         Z, A = [], []
         for neuron in self.neurons:
             neuron.forward(Inputs, training)
@@ -69,36 +79,32 @@ class Layer:
             A.append(neuron.A)
         self.Z = np.array(Z).T  # матрица Z значений z всех нейронов в слое (для матричных вычислений)
         self.A = np.array(A).T  # матрица A активаций a всех нейронов в слое (для матричных вычислений)
+        # print('Вычисленное в нейронах Z:', self.Z, self.Z.dtype)
+        # print('Активация каждого нейрона отдельно A:', self.A)
+        '''
         return self.A
        
     # Метод Backward pass через слой   
-    def backward(self, Delta):
+    def backward(self, delta):
         # Вычисление производной для каждого элемента Z через соответствующий нейрон (сделано для учета функции активации каждого нейрона)
-        Derivatives = np.array([[neuron.activation_derivative(z) for z in neuron.Z] for neuron in self.neurons]).T
-        # Вычисление производной без учета производных активаций каждого нейрона (быстрее но активация всех нейронов в слое одна и та же)
-        # Derivatives = self.activation_derivative(self.Z)  # замерить отличие в скорости
+        # derivatives = np.array([[neuron.activation_derivative(z) for z in neuron.Z] for neuron in self.neurons]).T
         
-        # Delta текущего слоя
-        self.Delta = Delta * Derivatives
+        # Вычисление производной без учета производных активаций каждого нейрона (быстрее но активация всех нейронов в слое одна и та же)
+        derivatives = self.activation_derivative(self.Z)
+        
+        # delta текущего слоя
+        self.delta = delta * derivatives
 
         # Вычисление градиента
-        self.Gradient['Weights'] = np.dot(self.Inputs.T, self.Delta)  # градент весов
-        self.Gradient['Biases'] = np.sum(self.Delta, axis=0, keepdims=True)  # градент смещений
+        self.gradient['weights'] = np.dot(self.Inputs.T, self.delta)  # градиент весов
+        self.gradient['bias'] = np.sum(self.delta, axis=0, keepdims=True)  # градиент смещений
 
-        # Delta для следующего слоя
-        Next_Delta = np.dot(self.Delta, self.Weights.T)
-        return Next_Delta
+        # delta для следующего (предыдущего) слоя
+        # delta = np.dot(self.delta, self.weights.T)
+        return np.dot(self.delta, self.weights.T)  # возвращаем delta для следующего (предыдущего) слоя
 
-    def update(self, learning_rate, optimizer=None):
-        if optimizer:
-            optimizer.update(self, learning_rate)
-        else:
-            # Обновляем матрицы весов и смещений всего слоя (!!! эти изменения будут также в соответствующих весах и смещегиях нейронов)
-            self.Weights -= learning_rate * self.Gradient['Weights']
-            # Формируем список индексов элементов Biases которые не равны None
-            not_none = np.where(self.Biases != None)
-            # Применяем операцию только к элементам массива Biases которые не равны None
-            self.Biases[not_none] -= learning_rate * self.Gradient['Biases'][not_none]
+    def update(self, optimizer):
+        optimizer.update(self)
 
     def activation_derivative(self, Z):
         return self.activation(Z, derivative=True)
@@ -123,8 +129,8 @@ class Dropout:
         else:
             return Inputs
 
-    def backward(self, Delta):
-        return Delta * self.mask / (1 - self.dropout_rate)
+    def backward(self, delta):
+        return delta * self.mask / (1 - self.dropout_rate)
 
-    def update(self, learning_rate, optimizer=None):
+    def update(self, optimizer):
         pass  # Dropout не имеет параметров для обновления
