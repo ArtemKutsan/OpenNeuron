@@ -56,18 +56,22 @@ class Layer:
             neuron.bias = bias  # ссылка на смещение нейрона в матрице смещений слоя
             neuron.index = index  # индекс нейрона в слое
             neuron.layer = self  # ссылка на слой в котором находится нейрон
+            # Новый вариант. Устанавливаем нейрону активацию слоя если у слоя не softmax активация иначе ставим нейрону активацию linear
+            neuron.activation = self.activation if self.activation != softmax else linear
+            ''' # Старый вариант с учетом активации каждого нейрона. Также необходимо изменить вычисление derivatives в forward. 
             # Попутно проверяем активации нейрона и если она равна None то устанавливаем ему активацию слоя
             if neuron.activation is None:
                 if self.activation == softmax:
                     neuron.activation = linear  # активация нейронов слоя softmax не нужна, то есть A = Z
                 else:
                     neuron.activation = self.activation  # если у нейрона не установлена активация то ставим ему активацию слоя 
+            '''
         return self.output_size
 
     # Метод Forward pass через слой   
     def forward(self, Inputs, training=True):
         self.Inputs = Inputs
-        # (Требуется доработка) Матрица Z вычисляется через матричные вычисления с учетом bias каждого нейрона, матрица A вычисляется БЕЗ учета настройки активации каждого нейрона
+        # Матрица Z вычисляется через матричные вычисления с учетом bias каждого нейрона, матрица A вычисляется БЕЗ учета настройки активации каждого нейрона
         self.Z = np.dot(self.Inputs, self.weights) + np.where(self.bias == None, 0, self.bias).astype(float)
         self.A = self.activation(self.Z)  # активация слоем (одна и та же для всех нейронов одного слоя)
         ''' # Отладка
@@ -114,7 +118,7 @@ class Layer:
         return self.activation(Z, derivative=True)
 
     def __str__(self):
-        return f'{self.name} {self.number}, neurons: {len(self.neurons)}, inputs: {self.Inputs[-1]}, activation: {self.activation.__name__}, output: {self.A[-1]}'
+        return f'{self.name} {self.number}, neurons: {len(self.neurons)}, inputs: {self.Inputs[-1]}, activation: {self.activation.__name__}, output (a): {self.A[-1]}'
 
 
 # Класс слоя для отключения нейронов 

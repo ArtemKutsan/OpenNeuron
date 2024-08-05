@@ -94,7 +94,7 @@ class NeuralNetwork:
             if self.batch_size is not None and self.final_batch_size is not None:
                 batch_size = self.batch_size + int((self.final_batch_size - self.batch_size) * (epoch + 1) / epochs)
             
-            # Перемешиваем данные
+            # Перемешиваем данные на каждой эпохе перед разделением на батчи
             if shuffle:
                 permutation = np.random.permutation(self.X_len)
                 X_shuffled = X[permutation]

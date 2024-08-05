@@ -98,8 +98,8 @@ class Unit(Neuron):
         self.id = id(self)  # уникальный id
         self.layer = None  # ссылка на слой в котором находится (устанавливается слоем)
         self.index = None  # индекс в слое (устанавливается слоем)
-        self.weights = weights  # веса (могут быть установлены в ручную или инициализированы слоем)
-        self.bias = bias  # смещение (может быть установлено в ручную или инициализировано слоем)
+        self.weights = weights  # веса (могут быть установлены вручную или инициализированы слоем)
+        self.bias = bias  # смещение (может быть установлено вручную или инициализировано слоем)
         self.activation = None  # функция активации (устанавливается слоем)
 
     @property
@@ -125,8 +125,8 @@ class Unit(Neuron):
     @property
     # Массив значений a батча (a каждого x в батче X)
     def A(self):
-        return self.activation(self.Z) if self.Z is not None else None
-        # return self.layer.A.T[self.index] if self.layer.A is not None else None
+        return self.activation(self.Z) if self.Z is not None else None  # собственная активация
+        # return self.layer.A.T[self.index] if self.layer.A is not None else None  # активация взятая из активации слоя
 
     @property
     # Значение a последнего прошедшего объекта (в рассчетах не используется, просто для вывода информации в методе __str__)
