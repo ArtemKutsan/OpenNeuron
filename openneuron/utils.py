@@ -23,7 +23,7 @@ def format(value, decimals=2, edge_items=2):
 # Оценка точности
 def network_scores(X, y, predictions):
     # predictions = predictions.reshape(y.shape)
-    print('Network scores:')
+    print('Scores:')
     print('Incorrect Predictions (Significant Difference) on Test Data:')
     all_predictions_correct = True
 

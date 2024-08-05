@@ -19,7 +19,7 @@ class NeuralNetwork:
         self.last_layer = self.layers[-1]
         self.inputs_dim = inputs_dim
         self.loss_function = self.init_loss_function(loss)
-        self.optimizer = optimizer or SGD(momentum=0)
+        self.optimizer = optimizer if optimizer is not None else SGD(momentum=0)
         self.batch_size = None
         self.final_batch_size = None
         self.epochs = None
@@ -52,13 +52,13 @@ class NeuralNetwork:
             A = layer.forward(Inputs, training)  # подаем входные данные в слой и получаем активацию (выход) слоя
             Inputs = A  # активация (выход слоя) это входные данные для следующего слоя
         # Активация всего последнего/выходного слоя (нужна для softmax в задачах классификации)
-        self.last_layer.A = self.last_layer.activation(self.last_layer.Z)
+        # self.last_layer.A = self.last_layer.activation(self.last_layer.Z)
         ''' # Отладочный вывод
         if training:
             print(f'Z нейронов выходного слоя в методе forward всей сети:\n{self.last_layer.Z}')
             print(f'Активация (A) выходного слоя в методе forward всей сети:\n{self.last_layer.A}')
         '''
-        return self.last_layer.A  # выход сети (активация последнего/выходного слоя/нейрона)
+        return A  # выход сети (активация последнего/выходного слоя/нейрона)
     
     # Метод Backward pass (обратное распрстранение ошибки) через всю сеть
     def backward(self, error):
