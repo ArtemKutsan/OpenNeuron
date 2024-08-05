@@ -87,6 +87,7 @@ class Neuron:
                f'z: {format(self.z, decimals=decimals)}, activation: {self.activation.__name__}, a: {format(self.a, decimals=decimals)}'
     
 
+# Класс для нейронов используемых в слое
 class Unit(Neuron):
     count = 0
 
