@@ -1,6 +1,7 @@
-from .units import Neuron, Unit
+from .units import Unit
 from .initializers import *
 from .activations import *
+from .utils import format
 
 
 # Класс для слоя
@@ -118,7 +119,9 @@ class Layer:
         return self.activation(Z, derivative=True)
 
     def __str__(self):
-        return f'{self.name} {self.number}, neurons: {len(self.neurons)}, inputs: {self.Inputs[-1]}, activation: {self.activation.__name__}, output (a): {self.A[-1]}'
+        decimals, edge_items = 4, 2
+        return f'{self.name} {self.number}, neurons: {len(self.neurons)}, inputs: {format(self.Inputs[-1], decimals, edge_items)}, ' \
+               f'activation: {self.activation.__name__}, output (a): {format(self.A[-1], decimals, edge_items)}'
 
 
 # Класс слоя для отключения нейронов 
