@@ -1,0 +1,57 @@
+/* styles.css */
+
+h1,
+h2 {
+    color: #fac863;
+    /* cdd1c5 9fcedf */
+    font-family: Cascadia Mono PL Light;
+    font-weight: 400;
+    font-style: italic;
+    text-indent: 20pt;
+    line-height: 1.0;
+}
+
+h3,
+h4,
+h5,
+h6 {
+    color: #fac863;
+    font-family: Cascadia Mono PL Light;
+    font-weight: 400;
+    font-style: italic;
+    text-indent: 20pt;
+    line-height: 1.0;
+}
+
+p {
+    /* color: #bbd5ed; */
+    font-family: Cascadia Mono PL Light;
+    text-indent: 20pt;
+    font-weight: 400;
+    line-height: 1.25;
+}
+
+a,
+a:hover {
+    text-decoration: none;
+}
+
+ul,
+ol {
+
+    font-family: Cascadia Mono PL Light;
+    line-height: 1.25;
+    font-weight: 350;
+}
+
+div.cell {
+    margin: 0;
+    padding: 0;
+}
+
+.output {
+    max-width: 100%;
+    overflow: auto;
+    margin: 0;
+    padding: 0;
+}
